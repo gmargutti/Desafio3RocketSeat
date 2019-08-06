@@ -65,6 +65,11 @@ class AppointmentController {
         .json({ error: 'You can only create appointments with providers' });
     }
 
+    if (req.userId === provider_id)
+      return res
+        .status(401)
+        .json({ error: 'You cannot create appointments with yourself' });
+
     // Check for past dates
     const hourStart = startOfHour(parseISO(date));
     if (isBefore(hourStart, new Date())) {
@@ -91,10 +96,12 @@ class AppointmentController {
       date,
     });
 
-    const user = User.findByPk(req.userId);
+    const user = await User.findByPk(req.userId);
     const formattedDate = format(hourStart, "'dia' dd 'de' MMMM',às' H:mm'h'", {
       locale: pt,
     });
+
+    console.log(user);
 
     await Notification.create({
       content: `Novo agendamento de ${user.name} para ${formattedDate}`,
